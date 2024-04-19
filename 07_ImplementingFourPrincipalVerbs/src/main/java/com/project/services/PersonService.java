@@ -6,7 +6,9 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.project.data.vo.v1.PersonVO;
 import com.project.exceptions.ResourceNotFound;
+import com.project.mapper.DozerMapper;
 import com.project.model.Person;
 import com.project.repositories.PersonRepository;
 
@@ -19,29 +21,34 @@ public class PersonService {
 	PersonRepository repository;
 	
 	
-	public List<Person> findyAll() {
-
-		return repository.findAll();
+	public List<PersonVO> findyAll() {
+		return DozerMapper.parseListObjects(repository.findAll(), PersonVO.class);
 	}
 	
 	
-	public Person findById(Long id) {
+	public PersonVO findById(Long id) {
 		
 		logger.info("Finding one person");
-	
-		return repository.findById(id).orElseThrow(() -> new ResourceNotFound("Not records found for this ID!"));
+		
+		var entity  = repository.findById(id).orElseThrow(() -> new ResourceNotFound("Not records found for this ID!"));
+		return DozerMapper.parseObject(entity, PersonVO.class);
+		
 	}
 	
-	public Person create(Person person) {
+	public PersonVO create(PersonVO person) {
+		
 		logger.info("Creating one person");
+		var entity  = DozerMapper.parseObject(person, Person.class);
 	
-		return repository.save(person);
+		var vo = DozerMapper.parseObject(repository.save(entity), PersonVO.class);
+		return vo;		
 	}
 	
-	public Person update(Person person) {
+		
+	public PersonVO update(PersonVO person) {
 		logger.info("Update one person");
 		
-		Person entity = repository.findById(person.getId())
+		var entity = repository.findById(person.getId())
 		.orElseThrow(() -> new ResourceNotFound("Not records found for this ID!"));
 		
 		entity.setFirstName(person.getFirstName());
@@ -49,17 +56,15 @@ public class PersonService {
 		entity.setAddress(person.getAddress());
 		entity.setGender(person.getGender());
 		
-		return repository.save(person);
+		var vo = DozerMapper.parseObject(repository.save(entity), PersonVO.class);
+		return vo;		
 	}
 	
 	public void delete(Long id) {
 		logger.info("Delete one person suceffuly");
 		
-		Person entity = repository.findById(id)
-				.orElseThrow(() -> new ResourceNotFound("Not records found for this ID!"));
+		var entity = repository.findById(id).orElseThrow(() -> new ResourceNotFound("Not records found for this ID!"));
 
-		
-		
 		repository.delete(entity);
 	}	
 }
